@@ -1,0 +1,98 @@
+.menu_izquierdo {
+  --width: 500px !important;
+}
+
+.clases {
+  height: fit-content;
+  border-left: 2px solid #c8102e;
+  overflow: scroll;
+  height: auto;
+}
+
+.claseCon {
+  display: block;
+  padding: 2px 5px 0px 0px;
+}
+
+.clase {
+  text-align: left;
+  border: 1px solid #e0e0e0;
+  border-left: none;
+  background: white;
+  color: #e5e2e2;
+  padding: 4px;
+  max-width: 140px;
+  min-width: 140px;
+  border-radius: 5px;
+}
+
+button .hora {
+  padding-top: 4px;
+  padding-left: 2px;
+}
+
+button .nombre {
+  font-weight: 400;
+}
+
+ion-card {
+  border-radius: 30px;
+  height: 50vh;
+  width: 100%;
+  max-width: 90%;
+  margin-bottom: 10px;
+}
+
+.cardfooter {
+  position: absolute;
+  width: 100%;
+  text-align: left;
+  bottom: 0px;
+}
+
+.cardfooter .left {
+  padding: 20px;
+}
+
+.cardfooter .right {
+  padding: 20px;
+  text-align: right;
+}
+
+ion-card-title {
+  color: #ffffff !important;
+}
+
+.titulo {
+  position: fixed;
+  font-size: 2rem;
+  left: 1rem;
+  top: 2rem;
+  z-index: 999999;
+  font-weight: bold;
+  color: #4e4e4e;
+}
+
+.subtitulo {
+  position: fixed;
+  font-size: 1rem;
+  left: 1rem;
+  top: 4rem;
+  z-index: 999999;
+  color: #4e4e4e;
+}
+
+ion-slide {
+  margin-bottom: 25px;
+}
+
+.refrescar {
+  position: fixed;
+  right: 1rem;
+  top: 2rem;
+  z-index: 9999;
+}
+
+.noclase {
+  margin-top: 4rem;
+}

@@ -1,0 +1,146 @@
+<ion-content color="warning">
+  <ion-text class="titulo" color="light">
+    <div class="grande">
+      Configuración
+    </div>
+    <div class="subgrande">
+      UPF
+    </div>
+  </ion-text>
+  <div class="formulario">
+    <ion-list lines="none">
+      <ion-item no-lines>
+        <ion-label>
+
+          <ion-select *ngIf="planDocente.type === 'SELECT'" [interfaceOptions]="customAlertOptions1"
+            placeholder="Seleccionar curso académico" [(ngModel)]="filters.planDocente" okText="Seleccionar"
+            cancelText="Atras" (ionChange)="selectChange($event)" name="planDocente">
+            <ion-select-option *ngFor="let option of planDocente.options" value="{{ option.value }}">{{ option.title }}
+            </ion-select-option>
+          </ion-select>
+
+          <ion-input *ngIf="planDocente.type === 'INPUT'" type="hidden" value="{{ planDocente.value }}" readonly>
+          </ion-input>
+        </ion-label>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>
+
+          <ion-select *ngIf="centro.type === 'SELECT'" [interfaceOptions]="customAlertOptions2"
+            placeholder="Seleccionar centro" [(ngModel)]="filters.centro" okText="Seleccionar" cancelText="Atras"
+            (ionChange)="selectChange($event)" name="centro">
+            <ion-select-option *ngFor="let option of centro.options" value="{{ option.value }}">{{ option.title }}
+            </ion-select-option>
+          </ion-select>
+
+          <ion-input *ngIf="centro.type === 'INPUT'" type="hidden" value="{{ centro.value }}" readonly></ion-input>
+        </ion-label>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>
+
+          <ion-select *ngIf="estudio.type === 'SELECT'" [interfaceOptions]="customAlertOptions3"
+            placeholder="Seleccionar estudio" [(ngModel)]="filters.estudio" okText="Seleccionar" cancelText="Atras"
+            (ionChange)="selectChange($event)" name="estudio">
+            <ion-select-option *ngFor="let option of estudio.options" value="{{ option.value }}">{{ option.title }}
+            </ion-select-option>
+          </ion-select>
+
+          <ion-input *ngIf="estudio.type === 'INPUT'" type="hidden" value="{{ estudio.value }}" readonly></ion-input>
+        </ion-label>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>
+
+          <ion-select *ngIf="planEstudio.type === 'SELECT'" [interfaceOptions]="customAlertOptions3"
+            placeholder="Seleccionar plan de estudio" [(ngModel)]="filters.planEstudio" okText="Seleccionar"
+            cancelText="Atras" (ionChange)="selectChange($event)" name="planEstudio">
+            <ion-select-option *ngFor="let option of planEstudio.options" value="{{ option.value }}">{{ option.title }}
+            </ion-select-option>
+          </ion-select>
+
+          <ion-input *ngIf="planEstudio.type === 'INPUT'" type="hidden" value="{{ planEstudio.value }}" readonly>
+          </ion-input>
+        </ion-label>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>
+
+          <ion-select *ngIf="curso.type === 'SELECT'" [interfaceOptions]="customAlertOptions5"
+            placeholder="Seleccionar curso" [(ngModel)]="filters.curso" okText="Seleccionar" cancelText="Atras"
+            (ionChange)="selectChange($event)" name="curso">
+            <ion-select-option *ngFor="let option of curso.options" value="{{ option.value }}">{{ option.title }}
+            </ion-select-option>
+          </ion-select>
+
+          <ion-input *ngIf="curso.type === 'INPUT'" type="hidden" value="{{ curso.value }}" readonly></ion-input>
+        </ion-label>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>
+
+          <ion-select *ngIf="trimestre.type === 'SELECT'" [interfaceOptions]="customAlertOptions6"
+            placeholder="Seleccionar periodo académico" [(ngModel)]="filters.trimestre" okText="Seleccionar"
+            cancelText="Atras" (ionChange)="selectChange($event)" name="trimestre">
+            <ion-select-option *ngFor="let option of trimestre.options" value="{{ option.value }}">{{ option.title }}
+            </ion-select-option>
+          </ion-select>
+
+          <ion-input *ngIf="trimestre.type === 'INPUT'" type="hidden" value="{{ trimestre.value }}" readonly>
+          </ion-input>
+        </ion-label>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>
+
+          <ion-select *ngIf="grupos.type === 'SELECT'" [interfaceOptions]="customAlertOptions7"
+            placeholder="Seleccionar grupo" multiple="true" [(ngModel)]="filters.grupos" okText="Seleccionar"
+            cancelText="Atras" (ionChange)="selectChange($event)" name="grupos">
+            <ion-select-option *ngFor="let option of grupos.options" value="{{ option.value }}">{{ option.title }}
+            </ion-select-option>
+          </ion-select>
+
+          <ion-input *ngIf="grupos.type === 'INPUT'" type="hidden" value="{{ grupos.value }}" readonly></ion-input>
+        </ion-label>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>
+
+          <ion-select *ngIf="asignaturas.type === 'SELECT'" [interfaceOptions]="customAlertOptions8"
+            placeholder="Seleccionar asignaturas" multiple="true" [(ngModel)]="filters.asignaturas" okText="Seleccionar"
+            cancelText="Atras" (ionChange)="selectChange($event)" name="asignaturas">
+            <ion-select-option *ngFor="let option of asignaturas.options" value="{{ option.value }}">{{ option.title }}
+            </ion-select-option>
+          </ion-select>
+
+          <ion-input *ngIf="asignaturas.type === 'INPUT'" type="hidden" value="{{ asignaturas.value }}" readonly>
+          </ion-input>
+        </ion-label>
+      </ion-item>
+
+    </ion-list>
+
+    <ion-button color="primary" expand="block" fill="solid" (click)="verCalendario()" [disabled]="
+    filters.planDocente === null ||
+    filters.centro === null ||
+    filters.centro === '-1' ||
+    filters.estudio === null ||
+    filters.planEstudio === null ||
+    filters.curso === null ||
+    filters.trimestre === null ||
+    filters.grupos === null ||
+    filters.asignaturas === null
+  ">
+      <ion-icon slot="start" name="calendar"></ion-icon>
+      Ver calendario
+    </ion-button>
+  </div>
+
+</ion-content>

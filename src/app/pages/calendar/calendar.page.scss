@@ -1,0 +1,38 @@
+.welcome-card img {
+  max-height: 35vh;
+  overflow: hidden;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 200;
+  color: #fff;
+  padding: 1rem;
+  background-color: #c8102e;
+  text-align: center;
+}
+
+.materia {
+  color: #f3f3f3;
+  font-size: 20px;
+  font-weight: 400;
+  border-radius: 5px;
+  margin-bottom: 0.1rem;
+  box-shadow: none;
+}
+
+.info {
+  border-radius: 5px;
+  font-size: small;
+  text-align: right;
+  background: white;
+  color: #4e4e4e;
+  box-shadow: none;
+  border: 1px solid #4e4e4e;
+}
+
+.nombre {
+  margin: auto;
+  font-size: 1rem;
+  font-weight: 300;
+}

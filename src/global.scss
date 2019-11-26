@@ -16,7 +16,7 @@
 @import "~@ionic/angular/css/normalize.css";
 @import "~@ionic/angular/css/structure.css";
 @import "~@ionic/angular/css/typography.css";
-@import '~@ionic/angular/css/display.css';
+@import "~@ionic/angular/css/display.css";
 
 /* Optional CSS utils that can be commented out */
 @import "~@ionic/angular/css/padding.css";
@@ -24,3 +24,29 @@
 @import "~@ionic/angular/css/text-alignment.css";
 @import "~@ionic/angular/css/text-transformation.css";
 @import "~@ionic/angular/css/flex-utils.css";
+
+table {
+  border: 2px solid #c8102e !important;
+}
+tr,
+th,
+td {
+  border: 0px !important;
+}
+th {
+  background-color: #c8102e;
+  color: #fff;
+}
+td.monthview-selected {
+  background-color: #c8102e !important;
+  color: #fff !important;
+}
+td.monthview-primary-with-event {
+  background-color: #607d8b;
+  color: #fff !important;
+  border-radius: 5px !important;
+  border: 1px solid #fafafa !important;
+}
+.monthview-current {
+  background-color: #607d8b !important;
+}

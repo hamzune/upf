@@ -1,0 +1,64 @@
+<ion-header>
+  <ion-toolbar mode="md" color="primary">
+    <ion-title style="font-size: 2rem; font-weight: 200;">
+      Clases
+      <span style=" font-size: 0.7rem; display: block;"><b>{{fechaHoy}}</b></span>
+    </ion-title>
+
+    <ion-buttons slot="end">
+      <ion-button color="light" (click)="refresh($event)">
+        <ion-icon slot="icon-only" name="refresh"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-item-sliding #slider id="slider" style="height: 100%;" *ngIf="hoy.length !== 0">
+    <ion-item-options class="menu_izquierdo" side="start">
+      <div class="clases">
+        <div class="claseCon" (click)="goToPage(materia)" *ngFor="let materia of hoy">
+          <button class="clase" [ngStyle]="{'border-color': materia.className}">
+            <div class="nombre" [ngStyle]="{'color': materia.className}">
+              {{materia.title}}
+            </div>
+            <div class="hora" [ngStyle]="{'color': materia.className}">
+              <ion-icon ios="ios-clock" md="md-clock"> </ion-icon> {{materia.start}}
+            </div>
+            <div class="hora" [ngStyle]="{'color': materia.className}">
+              <ion-icon ios="ios-school" md="md-school"></ion-icon> {{materia.aula}}
+            </div>
+          </button>
+        </div>
+      </div>
+    </ion-item-options>
+
+    <ion-item id="itemss" lines="none" style="display: flex;height: 100%;">
+      <ion-slides #slides id="slides" pager="true" [options]="slideOpts">
+        <ion-slide *ngFor="let materia of hoy">
+          <ion-card [ngStyle]="{'background': materia.className}" color="medium" (click)="goToPage(materia)">
+            <ion-card-header>
+              <ion-card-title class="ion-float-left" color="light" style="text-align: left;">{{materia.title}}
+              </ion-card-title>
+            </ion-card-header>
+            <ion-card-content class="ion-float-left">
+              {{materia.start}}
+              -
+              {{materia.end}}
+            </ion-card-content>
+            <ion-row class="cardfooter">
+              <ion-col class="left">
+                <p>{{materia.aula}}</p>
+              </ion-col>
+              <ion-col class="ion-float-right" class="right">
+                <p>{{materia.tipologia}}.{{materia.grup}}</p>
+              </ion-col>
+            </ion-row>
+          </ion-card>
+        </ion-slide>
+      </ion-slides>
+    </ion-item>
+  </ion-item-sliding>
+
+  <img src="../../../assets/images/noclase.PNG" class="noclase" *ngIf="hoy.length === 0" alt="" />
+</ion-content>
