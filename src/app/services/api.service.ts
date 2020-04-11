@@ -19,7 +19,7 @@ export class ApiService {
         .catch(err => reject(err));
     });
   }
-
+  
   public ActualizarCombosPubHora(filters) {
     return new Promise((resolve, reject) => {
       this.request
