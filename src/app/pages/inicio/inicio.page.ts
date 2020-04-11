@@ -1,7 +1,6 @@
 import { Component, OnInit, ViewChild } from "@angular/core";
-import { AlertController, IonItemSliding, IonSlides } from "@ionic/angular";
-import { Router } from "@angular/router";
-import { File } from "@ionic-native/file/ngx";
+import { IonItemSliding, IonSlides } from "@ionic/angular";
+import { Events } from "@ionic/angular";
 import { StorageService } from "../../services/storage.service";
 import { ApiService } from "../../services/api.service";
 import { NavController } from "@ionic/angular";
@@ -36,9 +35,9 @@ export class InicioPage implements OnInit {
 
   finde = false;
 
-  fechaToday = moment(moment().format("YYYY-MM-DD")).unix();
+  fechaToday = moment(moment().add(2, "day").format("YYYY-MM-DD")).unix();
 
-  fechaTomorrow = moment(moment().add(1, "day").format("YYYY-MM-DD")).unix();
+  fechaTomorrow = moment(moment().add(2, "day").format("YYYY-MM-DD")).unix();
 
   fechaHoy = moment().format("DD-MM-YYYY");
 
@@ -46,7 +45,15 @@ export class InicioPage implements OnInit {
     private api: ApiService,
     public navCtrl: NavController,
     private storage: StorageService,
-  ) {}
+    public events: Events
+  ) {
+    events.subscribe("back", () => {
+      this.courses();
+    });
+    events.subscribe("inicio", () => {
+      this.courses();
+    });
+  }
 
   ngOnInit() {}
 
@@ -61,39 +68,30 @@ export class InicioPage implements OnInit {
   }
 
   async courses() {
-
-    await this.getInfoStorage().then(()=>{
-
+    await this.getInfoStorage().then(() => {
       this.api
-      .selecionarRangoHorarios({
-        start: this.fechaToday.toString(),
-        end: this.fechaTomorrow.toString(),
-      })
-      .then(async (resp: any) => {
-        if (resp.success && typeof resp.data.error === "undefined") {
-          this.clases = resp.data;
-          this.hoy = [];
-          this.dia();
-        }else{
+        .selecionarRangoHorarios({
+          start: this.fechaToday.toString(),
+          end: this.fechaTomorrow.toString(),
+        })
+        .then(async (resp: any) => {
+          if (resp.success && typeof resp.data.error === "undefined") {
+            this.clases = resp.data;
+            this.hoy = [];
+            this.dia();
+          } else {
+            //this.clases = [];
+            //obtener las clases de hoy en local
 
-          //this.clases = [];
-          //obtener las clases de hoy en local
-          //IMPORTANTE
-          this.hoy = [];
-          this.dia();
-          
-        }
-      })
-      .catch((err) => console.log(err));
-
-
+            
+            //IMPORTANTE
+            this.hoy = [];
+            this.dia();
+          }
+        })
+        .catch((err) => console.log(err));
     });
-
-    
   }
-
-
-
 
   utf8_encode(argString) {
     const txt = document.createElement("textarea");
@@ -102,7 +100,6 @@ export class InicioPage implements OnInit {
   }
 
   async getInfoStorage() {
-    
     await this.getCombo("materias").then((resp) => {
       this.materias = resp === "" ? [] : resp;
     });
@@ -111,11 +108,15 @@ export class InicioPage implements OnInit {
       this.grups = resp === "" ? [] : resp;
     });
 
-    await this.getCombo("tareas").then((resp) =>{
+    await this.getCombo("tareas").then((resp) => {
       this.tareas = resp === "" ? [] : resp;
     });
 
+    await this.getCombo("horario").then((resp) => {
+      this.clases = resp === "" ? [] : resp;
+    });
 
+    
     // return new Promise(resolve => {
     //   this.getCombo('grups').then((resp) => {
     //     this.grups = resp === '' ? [] : resp;
@@ -153,7 +154,7 @@ export class InicioPage implements OnInit {
   }
   dia() {
     this.clases.forEach((materia) => {
-      if (typeof materia.title !== "undefined") {
+      if (typeof materia.title !== "undefined" && moment(moment(materia.start).format('YYYY-MM-DD')).isSame(moment().add(2,'day').format('YYYY-MM-DD'), 'day')) {
         if (!materia.mostrarMensaje) {
           if (this.materias[materia.codAsignatura] == null) {
             this.materias[materia.codAsignatura] = {
@@ -162,7 +163,6 @@ export class InicioPage implements OnInit {
               color: this.getRandomColor(materia.codAsignatura),
             };
           }
-
 
           this.tareashoy = [];
 
@@ -209,7 +209,7 @@ export class InicioPage implements OnInit {
 
             if (mat.grup === tipo) {
               //si coinciden los grupos lo añadimos
-                this.hoy.push(mat);
+              this.hoy.push(mat);
             } else {
               console.log("Grupo1: ", mat.grup);
               console.log("Grupo2: ", tipo);
@@ -234,15 +234,12 @@ export class InicioPage implements OnInit {
         //     this.hoy[index] = aux;
         //   }
         // });
-
-
       }
     });
 
-    this.storage.remove('materias').then(()=>{
-      this.storage.set('materias', this.materias);
+    this.storage.remove("materias").then(() => {
+      this.storage.set("materias", this.materias);
     });
-
   }
 
   borrar(lista) {
@@ -258,6 +255,7 @@ export class InicioPage implements OnInit {
   }
 
   goToPage(materia) {
+
     this.navCtrl.navigateForward("/materia/" + materia.codAsignatura);
   }
 }

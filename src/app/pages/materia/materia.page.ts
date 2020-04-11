@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { Events } from '@ionic/angular';
 
 
-import { File } from '@ionic-native/file/ngx';
 import { NavController } from '@ionic/angular';
 import * as moment from 'moment';
 import { StorageService } from '../../services/storage.service';
@@ -41,12 +41,13 @@ export class MateriaPage implements OnInit {
     private storage: StorageService,
     public activatedRoute: ActivatedRoute,
     private localNotificatios: LocalNotifications,
-    private file: File
+    public events: Events
   ) {
+
+
 
     this.codiMateria = this.activatedRoute.snapshot.paramMap.getAll('materia');
 
-  
     this.getInfoStorage().then(() => {
       // console.log(this.tareas[this.codiMateria]);
       this.separarTareas();
@@ -56,8 +57,7 @@ export class MateriaPage implements OnInit {
 
   async getInfoStorage() {
     
-    this.file.readAsText(this.file.dataDirectory,"materias.json").then((resp) => {
-      resp = JSON.parse(resp)
+    await this.getCombo('materias').then((resp)=>{
       let materias = resp === '' ? [] : resp;
       this.materia = materias[this.codiMateria];
     });
@@ -69,13 +69,13 @@ export class MateriaPage implements OnInit {
     const grups = await this.getCombo('grups');
     this.grups = grups === '' ? [] : grups;
 
-
-
   }
 
   ngOnInit() { }
 
   goBack() {
+
+    this.events.publish('back');
     this.navCtrl.back();
   }
 
@@ -206,7 +206,7 @@ export class MateriaPage implements OnInit {
           text: 'Guardar',
           handler: (data) => {
             this.addgrups(data.teoria, data.seminario, data.practica);
-
+            this.events.publish('inicio');
             this.navCtrl.navigateForward('/tabs/inicio');
             this.separarTareas();
 
