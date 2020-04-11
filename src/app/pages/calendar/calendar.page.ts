@@ -30,7 +30,6 @@ export class CalendarPage {
 
   thisDateTitle = '';
 
-  nameMes = '';
 
   eventSource = [];
 
@@ -68,7 +67,6 @@ export class CalendarPage {
 
   ionViewWillEnter() {
     this.findes = this.markDisabled(new Date());
-    this.nameMes = moment(moment().startOf('month').format('YYYY-MM-DD')).format('MMM');
     this.fechaToday = moment(moment().startOf('year').format('YYYY-MM-DD')).unix();
     this.fechaTomorrow = moment(moment().endOf('year').format('YYYY-MM-DD')).unix();
     this.courses();
@@ -323,9 +321,7 @@ export class CalendarPage {
   }
 
   onTimeSelected(ev) {
-    this.nameMes = moment(moment(moment(ev.selectedTime.getTime())).startOf('month').format('YYYY-MM-DD')).format('MMM');
     this.selectedDate = ev.selectedTime;
-
   }
 
   onViewTitleChanged(event) {
@@ -342,36 +338,13 @@ export class CalendarPage {
     return txt.value;
   }
 
-  get_colores(type) {
-    let color = '#1B2631';
-
-    switch (type) {
-      case 'Seminario':
-        color = '#154360';
-        break;
-
-      case 'Teoría':
-        color = '#0B5345';
-        break;
-
-      case 'Prácticas':
-        color = '#4D5656';
-        break;
-
-      default:
-        color = '#1B2631';
-        break;
-    }
-
-    return color;
-  }
 
   getRequest() {
     this.eventSource = [];
     this.horario.forEach(element => {
-      // console.log(new Date(element.start));
+
       element.title = this.utf8_encode(element.title);
-      // element.title = element.title.length > 12 ? element.title.slice(0, 12) + '...' : element.title;
+
       element.tipologia = element.tipologia === undefined ? 'G' : element.tipologia[0];
 
       if (this.grups[element.codAsignatura]) {
@@ -380,8 +353,8 @@ export class CalendarPage {
             element.tipologia[0] === 'S' ? this.grups[element.codAsignatura][0].s :
               this.grups[element.codAsignatura][0].p;
           if (element.grup !== tipo) {
-            // console.log(element.grup + ' .. ' + element.tipologia);
-            // console.log(tipo);
+
+
           } else {
             this.addNewEvent(
               element.codAsignatura,
@@ -399,8 +372,8 @@ export class CalendarPage {
             element.tipologia === 'S' ? this.grups[element.codAsignatura].s :
               this.grups[element.codAsignatura].p;
           if (element.grup !== tipo) {
-            // console.log(element.grup + ' .. ' + element.tipologia);
-            // console.log(tipo);
+
+            
           } else {
             this.addNewEvent(
               element.codAsignatura,
