@@ -14,7 +14,7 @@
 </ion-header>
 
 <ion-content>
-  <ion-item-sliding #slider id="slider" style="height: 100%;" *ngIf="hoy.length !== 0">
+  <!-- <ion-item-sliding #slider id="slider" style="height: 100%;" *ngIf="hoy.length !== 0">
     <ion-item-options class="menu_izquierdo" side="start">
       <div class="clases">
         <div class="claseCon" (click)="goToPage(materia)" *ngFor="let materia of hoy">
@@ -33,7 +33,7 @@
       </div>
     </ion-item-options>
 
-    <ion-item id="itemss" lines="none" style="display: flex;height: 100%;">
+    <ion-item id="itemss" lines="none" style="display: flex;height: 100%;"> -->
       <ion-slides #slides id="slides" pager="true" [options]="slideOpts">
         <ion-slide *ngFor="let materia of hoy">
           <ion-card [ngStyle]="{'background': materia.className}" color="medium" (click)="goToPage(materia)">
@@ -41,10 +41,29 @@
               <ion-card-title class="ion-float-left" color="light" style="text-align: left;">{{materia.title}}
               </ion-card-title>
             </ion-card-header>
-            <ion-card-content class="ion-float-left">
-              {{materia.start}}
-              -
-              {{materia.end}}
+            <ion-card-content style="width: 100%; margin-bottom: 47px;" class="ion-float-left">
+              <div class="hours" style="text-align:left; padding-bottom: 10px;">
+
+                {{materia.start}}
+                -
+                {{materia.end}}
+              </div>
+
+ 
+                <div  *ngFor="let tarea of materia.tareas">
+                  
+                  <ion-button *ngIf="tarea.hecha === 'false'" color="light" expand="full" fill="outline">
+                    <ion-label class="titulo_task">{{tarea.value}}</ion-label> 
+                  </ion-button>
+
+
+                 
+               
+              </div>
+                
+              
+              
+
             </ion-card-content>
             <ion-row class="cardfooter">
               <ion-col class="left">
@@ -57,8 +76,9 @@
           </ion-card>
         </ion-slide>
       </ion-slides>
-    </ion-item>
-  </ion-item-sliding>
-
-  <img src="../../../assets/images/noclase.PNG" class="noclase" *ngIf="hoy.length === 0" alt="" />
+    <!-- </ion-item> -->
+  <!-- </ion-item-sliding> -->
+      
+  <img src="../../../assets/images/noclase.jpg" class="noclase" *ngIf="hoy.length === 0 && finde == false" alt="" />
+  <img src="../../../assets/images/findes.jpg" class="noclase" *ngIf="finde == true" alt="" />
 </ion-content>

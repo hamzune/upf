@@ -4,6 +4,8 @@ import { Router } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { StorageService } from '../../services/storage.service';
 
+import { File } from '@ionic-native/file/ngx';
+import { AlertController } from '@ionic/angular';
 @Component({
   selector: 'app-settings',
   templateUrl: 'settings.page.html',
@@ -85,9 +87,11 @@ export class SettingsPage {
   };
 
   constructor(
+    private file: File,
     private api: ApiService,
     private storage: StorageService,
-    private router: Router
+    private router: Router,
+    public alertController: AlertController
   ) { }
 
   async ionViewWillEnter() {
@@ -97,8 +101,18 @@ export class SettingsPage {
 
     // REALIZAR LA PETICIÓN PARA OBTENER LOS COMBOS
     this.getCombos();
-
+    
     // this.getactivo();
+  }
+  async presentAlert() {
+    const alert = await this.alertController.create({
+      header: 'Información',
+      subHeader: 'Esta aplicación se ha creado para facilitar el acceso al horario del alumnado de la Universidad Pompeu Fabra. Aún se encuentra en fase de desarrollo asi que en las próximas fechas iré actualizando la App a medida que vaya solucionando los problemas que se originen o encuentre mejoras de funcionalidad. De momento solo se encuentra disponible para Android.\n NO es la aplicación oficial de la Universidad. Si teneis alguna sugerencia para poder mejorar la App, podeis contactarme por correo o por instagram.\n  ',
+      message: 'Correo: hb580470@gmail.com Instragram: @hamzune',
+      buttons: ['Salir']
+    });
+
+    await alert.present();
   }
 
   /**

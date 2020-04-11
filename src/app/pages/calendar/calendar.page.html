@@ -8,9 +8,10 @@
   <ng-template #template let-showEventDetail="showEventDetail" let-selectedDate="selectedDate"
     let-noEventsLabel="noEventsLabel">
     <ion-list class="clases">
-      <h5 class="noEvents" *ngIf="selectedDate.events.length == 0">
-        <img src="../../../assets/images/noclase.PNG" alt="" />
+      <h5 class="noEvents" *ngIf="selectedDate.events.length == 0 && findes == false">
+        <img src="../../../assets/images/noclase.jpg" alt="" />
       </h5>
+
       <br>
       <ion-grid>
         <ion-row class="materia" [ngStyle]="{'background': event.color}" (click)="goToPage(event)"
@@ -30,7 +31,7 @@
     </ion-list>
   </ng-template>
 
-  <calendar [monthviewEventDetailTemplate]="template" [eventSource]="eventSource"
+  <calendar [markDisabled]="markDisabled" [monthviewEventDetailTemplate]="template" [eventSource]="eventSource"
     [formatHourColumn]="calendar.formatHourColumn" [startHour]="9" [calendarMode]="calendar.mode"
     [currentDate]="calendar.currentDate" (onCurrentDateChanged)="onCurrentDateChanged($event)"
     [startingDayMonth]="calendar.startingDayMonth" [startingDayWeek]="calendar.startingDayWeek"

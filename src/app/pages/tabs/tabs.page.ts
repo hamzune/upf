@@ -5,7 +5,6 @@ import { ToastController } from '@ionic/angular';
 
 import { NetworkService } from '../../services/network.service';
 
-import { AdmobFreeService } from '../../service/admobfree.service';
 
 @Component({
   selector: 'app-tabs',
@@ -18,7 +17,7 @@ export class TabsPage {
   constructor(
     public navCtrl: NavController,
     private networks: NetworkService,
-    private admobFreeService: AdmobFreeService,
+
     public toastController: ToastController
   ) {
     this.network = this.networks.statusNetwork.value;
@@ -28,6 +27,6 @@ export class TabsPage {
   }
 
   ngOnInit() {
-    this.admobFreeService.BannerAd();
+
   }
 }

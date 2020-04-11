@@ -1,5 +1,7 @@
 import { Component } from '@angular/core';
 
+import { File } from '@ionic-native/file/ngx';
+
 import { AlertController } from '@ionic/angular';
 import { NavController } from '@ionic/angular';
 import { Router } from '@angular/router';
@@ -38,13 +40,17 @@ export class CalendarPage {
 
   materias: any = [];
 
+  findes =  false;
+
   fechaToday = moment(moment().format('YYYY-MM-DD')).unix();
 
   fechaTomorrow = moment(moment().add(3, 'day').format('YYYY-MM-DD')).unix();
 
   hoy: any[] = [];
 
-  clases = [];
+  update = false;
+
+  clases;
 
   markDisabled = (date: Date) => {
     return (date.getDay() === 6 || date.getDay() === 0);
@@ -55,15 +61,18 @@ export class CalendarPage {
     private storage: StorageService,
     public alertController: AlertController,
     private api: ApiService,
-    private router: Router
+    private router: Router,
+    private file: File
   ) {
   }
 
   ionViewWillEnter() {
+    this.findes = this.markDisabled(new Date());
     this.nameMes = moment(moment().startOf('month').format('YYYY-MM-DD')).format('MMM');
-    this.fechaToday = moment(moment().startOf('month').format('YYYY-MM-DD')).unix();
-    this.fechaTomorrow = moment(moment().endOf('month').format('YYYY-MM-DD')).unix();
+    this.fechaToday = moment(moment().startOf('year').format('YYYY-MM-DD')).unix();
+    this.fechaTomorrow = moment(moment().endOf('year').format('YYYY-MM-DD')).unix();
     this.courses();
+ 
   }
 
   courses() {
@@ -78,11 +87,13 @@ export class CalendarPage {
           this.hoy = [];
           this.horario = [];
           this.dia();
-          this.getInfoStorage().then(() => {
+          await this.getInfoStorage().then(() => {
             this.getRequest();
+            this.dia();
           });
+          
         } else {
-          this.presentAlert();
+
         }
       })
       .catch(err => console.log(err));
@@ -149,18 +160,39 @@ export class CalendarPage {
   onEventSelected(ev) { }
 
   goToPage(materia) {
-    this.navCtrl.navigateForward('/materia/' + materia.codAsignatura);
+    if(materia.codAsignatura){
+      this.navCtrl.navigateForward('/materia/' + materia.codAsignatura);
+    }
   }
-
+  getRandomColor(c) {
+    var color = '#';
+    
+    if(c){
+      c = ''+c;
+      var letters = '0123456789ABCDEF';
+      for (var i = 0; i < 3; i++) {
+        color += c[i];
+      }
+      for (var i = 0; i < 3; i++) {
+        color += letters[Math.floor(Math.random() * 10)];
+      }
+    }else{
+      color="black"
+    }
+    
+    return color;
+  }
   dia() {
     this.clases.forEach(materia => {
+      
       if (typeof materia.title !== 'undefined') {
         if (!materia.mostrarMensaje) {
           if (this.materias[materia.codAsignatura] == null) {
+
             this.materias[materia.codAsignatura] = {
               id: materia.codAsignatura,
               title: this.utf8_encode(materia.title),
-              color: this.get_colores(this.utf8_encode(materia.tipologia))
+              color: this.getRandomColor(materia.codAsignatura)
             };
           }
 
@@ -217,15 +249,44 @@ export class CalendarPage {
     // this.storage.remove('materias');
     // this.storage.remove('hoario');
 
-    this.storage.set('materias', this.materias);
-    this.storage.set('horario', this.clases);
+    this.file.writeFile(this.file.dataDirectory,'horarios.json',JSON.stringify(this.clases)).then(()=>{
+      //console.log( this.file.readAsBinaryString(this.file.dataDirectory,"horarios.json"));
+
+    }).catch(()=>{
+
+      this.file.writeExistingFile(this.file.dataDirectory,'horarios.json',JSON.stringify(this.clases)).then(()=>{
+        //console.log( this.file.readAsBinaryString(this.file.dataDirectory,"horarios.json"));
+  
+      }).catch(()=>{
+        // console.log( this.file.readAsText(this.file.dataDirectory,"horarios.json"));
+        // console.log("erroooor")
+      });
+    });
+
+
+    this.file.writeFile(this.file.dataDirectory,'materias.json',JSON.stringify(this.materias)).then(()=>{
+      // console.log( this.file.readAsBinaryString(this.file.dataDirectory,"materias.json"));
+
+    }).catch(()=>{
+
+      this.file.writeExistingFile(this.file.dataDirectory,'materias.json',JSON.stringify(this.materias)).then(()=>{
+        //console.log( this.file.readAsBinaryString(this.file.dataDirectory,"materias.json"));
+  
+      }).catch(()=>{
+        // console.log( this.file.readAsText(this.file.dataDirectory,"materias.json"));
+        // console.log("erroooor");
+      });
+    });
+
   }
 
   async getInfoStorage() {
     let materias;
 
-    await this.getCombo('materias').then((resp) => {
+    await this.file.readAsText(this.file.dataDirectory,"materias.json").then((resp) => {
+      resp = JSON.parse(resp)
       materias = resp === '' ? [] : resp;
+   
     });
 
     materias.forEach(element => {
@@ -236,8 +297,10 @@ export class CalendarPage {
 
     let horario;
 
-    await this.getCombo('horario').then((resp) => {
+    await this.file.readAsText(this.file.dataDirectory,"horarios.json").then((resp) => {
+      resp = JSON.parse(resp)
       horario = resp === '' ? [] : resp;
+
     });
 
     horario.forEach(element => {
@@ -260,16 +323,9 @@ export class CalendarPage {
   }
 
   onTimeSelected(ev) {
-    if (
-      moment(moment(this.selectedDate.getTime())).startOf('month').format('YYYY-MM-DD') !==
-      moment(moment(ev.selectedTime.getTime())).startOf('month').format('YYYY-MM-DD')) {
-      this.nameMes = moment(moment(moment(ev.selectedTime.getTime())).startOf('month').format('YYYY-MM-DD')).format('MMM');
-      this.fechaToday = moment(moment(moment(ev.selectedTime.getTime())).startOf('month').format('YYYY-MM-DD')).unix();
-      this.fechaTomorrow = moment(moment(moment(ev.selectedTime.getTime())).endOf('month').format('YYYY-MM-DD')).unix();
-      this.courses();
+    this.nameMes = moment(moment(moment(ev.selectedTime.getTime())).startOf('month').format('YYYY-MM-DD')).format('MMM');
+    this.selectedDate = ev.selectedTime;
 
-      this.selectedDate = ev.selectedTime;
-    }
   }
 
   onViewTitleChanged(event) {
@@ -324,8 +380,8 @@ export class CalendarPage {
             element.tipologia[0] === 'S' ? this.grups[element.codAsignatura][0].s :
               this.grups[element.codAsignatura][0].p;
           if (element.grup !== tipo) {
-            console.log(element.grup + ' .. ' + element.tipologia);
-            console.log(tipo);
+            // console.log(element.grup + ' .. ' + element.tipologia);
+            // console.log(tipo);
           } else {
             this.addNewEvent(
               element.codAsignatura,
@@ -343,8 +399,8 @@ export class CalendarPage {
             element.tipologia === 'S' ? this.grups[element.codAsignatura].s :
               this.grups[element.codAsignatura].p;
           if (element.grup !== tipo) {
-            console.log(element.grup + ' .. ' + element.tipologia);
-            console.log(tipo);
+            // console.log(element.grup + ' .. ' + element.tipologia);
+            // console.log(tipo);
           } else {
             this.addNewEvent(
               element.codAsignatura,

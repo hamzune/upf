@@ -1,5 +1,5 @@
 <ion-content>
-  <div class="clase" [ngStyle]="{'background': materia.color}">
+  <div class="clase" [ngStyle]="{'background': !materia.color ? 'black' : materia.color}">
     <div class="materia">
       <ion-grid>
         <ion-row class="title">

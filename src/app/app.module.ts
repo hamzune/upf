@@ -2,6 +2,8 @@ import { LOCALE_ID,NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouteReuseStrategy } from '@angular/router';
 
+import { File } from '@ionic-native/file/ngx';
+
 import { IonicModule, IonicRouteStrategy } from '@ionic/angular';
 import { IonicStorageModule } from '@ionic/storage';
 
@@ -10,10 +12,10 @@ import { StatusBar } from '@ionic-native/status-bar/ngx';
 import { HTTP } from '@ionic-native/http/ngx';
 import { Network } from '@ionic-native/network/ngx';
 
-import { AdMobFree } from '@ionic-native/admob-free/ngx';
+
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
-import { AdmobFreeService } from './service/admobfree.service';
+
 
 import { ApiService } from './services/api.service';
 import { NetworkService } from './services/network.service';
@@ -48,11 +50,12 @@ import { LocalNotifications } from '@ionic-native/local-notifications/ngx';
     AppRoutingModule
   ],
   providers: [
+    File,
     StatusBar,
     SplashScreen,
-    AdMobFree,
+
     LocalNotifications,
-    AdmobFreeService,
+
     { provide: LOCALE_ID, useValue: 'es-Ar' },
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
     HTTP,

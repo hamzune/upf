@@ -37,7 +37,7 @@ button .nombre {
 
 ion-card {
   border-radius: 30px;
-  height: 50vh;
+  min-height: 50vh;
   width: 100%;
   max-width: 90%;
   margin-bottom: 10px;
@@ -95,4 +95,10 @@ ion-slide {
 
 .noclase {
   margin-top: 4rem;
+}
+
+.tareas {
+  border-radius: 15px 15px 0px 0px;
+  margin-top: 10%;
+  background: white;
 }

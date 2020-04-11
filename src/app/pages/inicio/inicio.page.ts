@@ -1,6 +1,7 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { AlertController, IonItemSliding, IonSlides } from '@ionic/angular';
 import { Router } from '@angular/router';
+import { File } from '@ionic-native/file/ngx';
 import { StorageService } from '../../services/storage.service';
 import { ApiService } from '../../services/api.service';
 import { NavController } from '@ionic/angular';
@@ -19,7 +20,11 @@ export class InicioPage implements OnInit {
     initialSlide: 20
   };
 
-  clases = [];
+  clases;
+
+  tareas : any ;
+  
+  tareashoy : any[] = [] ;
 
   mat: any;
 
@@ -33,6 +38,8 @@ export class InicioPage implements OnInit {
 
   fecha = new Date();
 
+  finde  = false;
+
   fechaToday = moment(moment().format('YYYY-MM-DD')).unix();
 
   fechaTomorrow = moment(moment().add(1, 'day').format('YYYY-MM-DD')).unix();
@@ -40,6 +47,7 @@ export class InicioPage implements OnInit {
   fechaHoy = moment().format('DD-MM-YYYY');
 
   constructor(
+    private file: File,
     private api: ApiService,
     public navCtrl: NavController,
     private storage: StorageService,
@@ -50,30 +58,25 @@ export class InicioPage implements OnInit {
   ngOnInit() { }
 
   ionViewWillEnter() {
+    var date = new Date();
+    this.finde = (date.getDay() === 6 || date.getDay() === 0);
     this.courses();
+    
   }
 
-  openit() {
-    const timeout = setTimeout(() => {
 
-      this.slides.slideTo(0, 2000);
-
-      this.slider.closeOpened().then(() => {
-
-        this.slider.open('start');
-        clearTimeout(timeout);
-
-      });
-
-    }, 1000);
-  }
 
   refresh(event) {
     this.courses();
-    event.target.complete();
+    
   }
 
-  courses() {
+
+  async courses() {
+    
+    const tareas = await this.getCombo('tareas');
+    this.tareas = tareas === '' ? [] : tareas;
+    
     this.api
       .selecionarRangoHorarios({
         start: this.fechaToday.toString(),
@@ -83,15 +86,25 @@ export class InicioPage implements OnInit {
         if (resp.success && typeof resp.data.error === 'undefined') {
           this.clases = resp.data;
           this.hoy = [];
+          
           await this.getInfoStorage();
-
           this.dia();
+
+     
         } else {
-          this.presentAlert();
+            await this.file.readAsText(this.file.dataDirectory,"horarios.json").then((resp) => {
+              resp = JSON.parse(resp)
+              this.clases = resp === '' ? [] : resp;
+
+            });
+            this.hoy = [];
+            await this.getInfoStorage();
+            this.dia();
         }
       })
-      .catch(err => console.log(err));
+      .catch((err => console.log(err)));
   }
+
 
   async presentAlert() {
     const alert = await this.alertController.create({
@@ -134,6 +147,7 @@ export class InicioPage implements OnInit {
         this.grups = resp === '' ? [] : resp;
         resolve();
       });
+      
     });
   }
 
@@ -144,31 +158,26 @@ export class InicioPage implements OnInit {
     return value;
   }
 
-  get_colores(type) {
-    let color = '#1B2631';
 
-    switch (type) {
-      case 'Seminario':
-        color = '#154360';
-        break;
-
-      case 'Teoría':
-        color = '#0B5345';
-        break;
-
-      case 'Prácticas':
-        color = '#4D5656';
-        break;
-
-      default:
-        color = '#1B2631';
-        break;
+  getRandomColor(c) {
+    var color = '#';
+    
+    if(c){
+      c = ''+c;
+      var letters = '0123456789ABCDEF';
+      for (var i = 0; i < 3; i++) {
+        color += c[i];
+      }
+      for (var i = 0; i < 3; i++) {
+        color += letters[Math.floor(Math.random() * 10)];
+      }
+    }else{
+      color="black"
     }
-
+    
     return color;
   }
-
-  dia() {
+   dia() {
     this.clases.forEach(materia => {
       if (typeof materia.title !== 'undefined') {
         if (!materia.mostrarMensaje) {
@@ -176,13 +185,24 @@ export class InicioPage implements OnInit {
             this.materias[materia.codAsignatura] = {
               id: materia.codAsignatura,
               title: this.utf8_encode(materia.title),
-              color: this.get_colores(this.utf8_encode(materia.tipologia))
+              color: this.getRandomColor(materia.codAsignatura)
             };
           }
-
+          //console.log(materia);
           if (moment(moment(materia.start).format('YYYY-MM-DD')).isSame(moment().format('YYYY-MM-DD'), 'day')) {
             const start = materia.start;
             const end = materia.end;
+            this.tareashoy = [];
+            try {
+              this.tareas[materia.codAsignatura].forEach((tarea)=>{
+                if(this.sameDay(new Date(tarea.fecha),new Date())){
+                  this.tareashoy.push(tarea);
+                }
+              })
+            } catch (error) {
+              
+            }
+
             const mat = {
               grup: materia.grup,
               aula: materia.aula,
@@ -192,26 +212,32 @@ export class InicioPage implements OnInit {
               start: start.slice(11, -3),
               end: end.slice(11, -3),
               className: this.materias[materia.codAsignatura].color,
+              tareas: this.tareashoy
             };
 
             if (this.grups[mat.codAsignatura]) {
               try {
-                const tipo = mat.tipologia[0] === 'T' ? this.grups[mat.codAsignatura][0].t :
-                  mat.tipologia[0] === 'S' ? this.grups[mat.codAsignatura][0].s :
-                    this.grups[mat.codAsignatura][0].p;
-                if (mat.grup !== tipo) {
-                } else {
-                  this.hoy.push(mat);
-                }
+                var teoria = this.grups[mat.codAsignatura][0].t;
+                var seminario = this.grups[mat.codAsignatura][0].s;
+                var practica = this.grups[mat.codAsignatura][0].p;
               } catch (error) {
-                const tipo = mat.tipologia === 'T' ? this.grups[mat.codAsignatura].t :
-                  mat.tipologia === 'S' ? this.grups[mat.codAsignatura].s :
-                    this.grups[mat.codAsignatura].p;
+                var teoria = this.grups[mat.codAsignatura].t;
+                var seminario = this.grups[mat.codAsignatura].s;
+                var practica = this.grups[mat.codAsignatura].p;
+              }
+              
+
+              var tipo = mat.tipologia[0] === 'T' ?  teoria :
+              mat.tipologia[0] === 'S' ? seminario :
+                practica;
+                
                 if (mat.grup !== tipo) {
+                  console.log("Grupo1: ", mat.grup);
+                  console.log("Grupo2: ", tipo);
                 } else {
                   this.hoy.push(mat);
                 }
-              }
+
             } else {
               this.hoy.push(mat);
               this.hoy = this.hoy.sort((a, b) => a.start.slice(0, 2) - b.start.slice(0, 2));
@@ -233,12 +259,12 @@ export class InicioPage implements OnInit {
     // this.storage.remove('materias');
     // this.storage.remove('hoario');
 
-    this.storage.set('materias', this.materias);
-    this.storage.set('horario', this.clases);
+     
 
-    if (this.hoy.length > 0) {
-      this.openit();
-    }
+
+    // this.storage.set('materias', this.materias);
+    // this.storage.set('horario', this.clases);
+
   }
 
   borrar(lista) {

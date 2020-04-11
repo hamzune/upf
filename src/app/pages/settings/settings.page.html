@@ -1,4 +1,7 @@
 <ion-content color="warning">
+  <ion-button (click)="presentAlert()" style="position: absolute; width: auto;" class="help">
+    <ion-icon  name="information-circle-outline"></ion-icon>
+  </ion-button>
   <ion-text class="titulo" color="light">
     <div class="grande">
       Configuración
@@ -27,7 +30,7 @@
       <ion-item>
         <ion-label>
 
-          <ion-select *ngIf="centro.type === 'SELECT'" [interfaceOptions]="customAlertOptions2"
+          <ion-select  *ngIf="centro.type === 'SELECT'" [interfaceOptions]="customAlertOptions2"
             placeholder="Seleccionar centro" [(ngModel)]="filters.centro" okText="Seleccionar" cancelText="Atras"
             (ionChange)="selectChange($event)" name="centro">
             <ion-select-option *ngFor="let option of centro.options" value="{{ option.value }}">{{ option.title }}
@@ -139,8 +142,8 @@
     filters.asignaturas === null
   ">
       <ion-icon slot="start" name="calendar"></ion-icon>
-      Ver calendario
+      Actualizar calendario
     </ion-button>
   </div>
-
+   
 </ion-content>

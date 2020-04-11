@@ -1,5 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+
+
+import { File } from '@ionic-native/file/ngx';
 import { NavController } from '@ionic/angular';
 import * as moment from 'moment';
 import { StorageService } from '../../services/storage.service';
@@ -31,17 +34,19 @@ export class MateriaPage implements OnInit {
   info: any = 'nada';
 
   notis = [];
-
+  
   constructor(
     public alertController: AlertController,
     private navCtrl: NavController,
     private storage: StorageService,
     public activatedRoute: ActivatedRoute,
-    private localNotificatios: LocalNotifications
+    private localNotificatios: LocalNotifications,
+    private file: File
   ) {
 
     this.codiMateria = this.activatedRoute.snapshot.paramMap.getAll('materia');
 
+  
     this.getInfoStorage().then(() => {
       // console.log(this.tareas[this.codiMateria]);
       this.separarTareas();
@@ -50,13 +55,22 @@ export class MateriaPage implements OnInit {
   }
 
   async getInfoStorage() {
+    
+    this.file.readAsText(this.file.dataDirectory,"materias.json").then((resp) => {
+      resp = JSON.parse(resp)
+      let materias = resp === '' ? [] : resp;
+      this.materia = materias[this.codiMateria];
+    });
+
+
     const tareas = await this.getCombo('tareas');
     this.tareas = tareas === '' ? [] : tareas;
 
     const grups = await this.getCombo('grups');
     this.grups = grups === '' ? [] : grups;
 
-    this.materia = (await this.getCombo('materias'))[this.codiMateria];
+
+
   }
 
   ngOnInit() { }
