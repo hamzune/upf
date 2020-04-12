@@ -1,5 +1,7 @@
 import { Component } from "@angular/core";
 
+import { Events } from "@ionic/angular";
+
 import { AlertController } from "@ionic/angular";
 import { NavController } from "@ionic/angular";
 import { Router } from "@angular/router";
@@ -28,8 +30,6 @@ export class CalendarPage {
 
   thisDateTitle = "";
 
-  nameMes = "";
-
   eventSource = [];
 
   grups: any = [];
@@ -38,13 +38,11 @@ export class CalendarPage {
 
   materias: any = [];
 
-  fechaToday = moment(moment().startOf('year').format('YYYY-MM-DD')).unix();
+  findes = false;
 
-  fechaTomorrow = moment(moment().endOf('year').format('YYYY-MM-DD')).unix();
+  fechaToday = moment(moment().startOf("year").format("YYYY-MM-DD")).unix();
 
-  hoy: any[] = [];
-
-  clases = [];
+  fechaTomorrow = moment(moment().endOf("year").format("YYYY-MM-DD")).unix();
 
   markDisabled = (date: Date) => {
     return date.getDay() === 6 || date.getDay() === 0;
@@ -55,49 +53,55 @@ export class CalendarPage {
     private storage: StorageService,
     public alertController: AlertController,
     private api: ApiService,
-  ) {}
+    private router: Router,
+    public events: Events
+  ) {
+    events.subscribe("back", () => {
+      this.courses();
+    });
+    events.subscribe("calendar", () => {
+      this.courses();
+    });
+  }
 
   ionViewWillEnter() {
+    this.findes = this.markDisabled(new Date());
     this.courses();
   }
 
-  courses() {
-
-    this.api
-      .selecionarRangoHorarios({
-        start: this.fechaToday.toString(),
-        end: this.fechaTomorrow.toString(),
-      })
-      .then(async (resp: any) => {
-        if (resp.success && typeof resp.data.error === "undefined") {
-          this.clases = resp.data;
-          this.horario = [];
-          this.dia();
-          this.getInfoStorage().then(() => {
+  async courses() {
+    await this.getInfoStorage().then(() => {
+      this.api
+        .selecionarRangoHorarios({
+          start: this.fechaToday.toString(),
+          end: this.fechaTomorrow.toString(),
+        })
+        .then(async (resp: any) => {
+          if (resp.success && typeof resp.data.error === "undefined") {
+            this.horario = resp.data;
+            console.log("Consulta web");
             this.getRequest();
-          });
-        } else {
-          this.getInfoStorage().then(() => {
-            this.dia();
+          } else {
+            console.log("De memoria");
             this.getRequest();
-          });
-
-        }
-      })
-      .catch((err) => console.log(err));
+          }
+        })
+        .catch((err) => console.log(err));
+    });
   }
 
-  dayMode() {
-    this.calendar.mode = "day";
-  }
 
-  weekMode() {
-    this.calendar.mode = "week";
-  }
+  // dayMode() {
+  //   this.calendar.mode = 'day';
+  // }
 
-  monthMode() {
-    this.calendar.mode = "month";
-  }
+  // weekMode() {
+  //   this.calendar.mode = 'week';
+  // }
+
+  // monthMode() {
+  //   this.calendar.mode = 'month';
+  // }
 
   addNewEvent(
     codigo: any,
@@ -106,13 +110,19 @@ export class CalendarPage {
     aulas: any,
     tipos: any,
     start: any,
-    end: any,
-    className: any
+    end: any
   ) {
     start = new Date(start);
     end = new Date(end);
-
-    const event = {
+    
+    let colorr;
+    try {
+       colorr = this.materias[codigo].color ;
+    } catch (error) {
+       colorr = 'black' ;
+    }
+    
+    const event = { 
       codAsignatura: codigo,
       title: titulo,
       aula: aulas,
@@ -123,7 +133,7 @@ export class CalendarPage {
       startTimeString: moment(start.getTime()).format("HH:mm"),
       endTimeString: moment(end.getTime()).format("HH:mm"),
       allDay: false,
-      color: this.materias[codigo].color,
+      color: colorr,
     };
 
     this.eventSource.push(event);
@@ -132,111 +142,18 @@ export class CalendarPage {
   onEventSelected(ev) {}
 
   goToPage(materia) {
-    this.navCtrl.navigateForward("/materia/" + materia.codAsignatura);
-  }
-
-  dia() {
-    this.hoy=[];
-    this.clases.forEach((materia) => {
-      if (typeof materia.title !== "undefined") {
-        if (!materia.mostrarMensaje) {
-          if (this.materias[materia.codAsignatura] == null) {
-            this.materias[materia.codAsignatura] = {
-              id: materia.codAsignatura,
-              title: this.utf8_encode(materia.title),
-              color: this.get_colores(this.utf8_encode(materia.tipologia)),
-            };
-          }
-
-          if (
-            moment(moment(materia.start).format("YYYY-MM-DD")).isSame(
-              moment().format("YYYY-MM-DD"),
-              "day"
-            )
-          ) {
-            const start = materia.start;
-            const end = materia.end;
-            const mat = {
-              grup: materia.grup,
-              aula: materia.aula,
-              title: this.utf8_encode(materia.title),
-              codAsignatura: materia.codAsignatura,
-              tipologia: this.utf8_encode(materia.tipologia),
-              start: start.slice(11, -3),
-              end: end.slice(11, -3),
-              className: this.materias[materia.codAsignatura].color,
-            };
-
-            if (this.grups[mat.codAsignatura]) {
-              try {
-                const tipo =
-                  mat.tipologia[0] === "T"
-                    ? this.grups[mat.codAsignatura][0].t
-                    : mat.tipologia[0] === "S"
-                    ? this.grups[mat.codAsignatura][0].s
-                    : this.grups[mat.codAsignatura][0].p;
-                if (mat.grup !== tipo) {
-                } else {
-                  this.hoy.push(mat);
-                }
-              } catch (error) {
-                const tipo =
-                  mat.tipologia === "T"
-                    ? this.grups[mat.codAsignatura].t
-                    : mat.tipologia === "S"
-                    ? this.grups[mat.codAsignatura].s
-                    : this.grups[mat.codAsignatura].p;
-                if (mat.grup !== tipo) {
-                } else {
-                  this.hoy.push(mat);
-                }
-              }
-            } else {
-              this.hoy.push(mat);
-              this.hoy = this.hoy.sort(
-                (a, b) => a.start.slice(0, 2) - b.start.slice(0, 2)
-              );
-            }
-          }
-        }
-
-        this.hoy.forEach((ele, index) => {
-          const hora = new Date().getHours();
-          if (hora > ele.start.slice(0, 2)) {
-            const aux = this.hoy[0];
-            this.hoy[0] = ele;
-            this.hoy[index] = aux;
-          }
-        });
-      }
-    });
-
-    this.storage.set("horario", this.clases);
+    if (materia.codAsignatura) {
+      this.navCtrl.navigateForward("/materia/" + materia.codAsignatura);
+    }
   }
 
   async getInfoStorage() {
-    let materias;
+    await this.getCombo("horario").then((resp) => {
+      this.horario = resp === "" ? [] : resp;
+    });
 
     await this.getCombo("materias").then((resp) => {
-      materias = resp === "" ? [] : resp;
-    });
-
-    materias.forEach((element) => {
-      if (element != null) {
-        this.materias[element.id] = element;
-      }
-    });
-
-    let horario;
-
-    await this.getCombo("horario").then((resp) => {
-      horario = resp === "" ? [] : resp;
-    });
-
-    horario.forEach((element) => {
-      if (element != null) {
-        this.horario.push(element);
-      }
+      this.materias = resp === "" ? [] : resp;
     });
 
     await this.getCombo("grups").then((resp) => {
@@ -257,7 +174,6 @@ export class CalendarPage {
   }
 
   onViewTitleChanged(event) {
-    this.courses();
     this.thisDateTitle = event;
   }
 
@@ -271,105 +187,73 @@ export class CalendarPage {
     return txt.value;
   }
 
-  get_colores(type) {
-    let color = "#1B2631";
-
-    switch (type) {
-      case "Seminario":
-        color = "#154360";
-        break;
-
-      case "Teoría":
-        color = "#0B5345";
-        break;
-
-      case "Prácticas":
-        color = "#4D5656";
-        break;
-
-      default:
-        color = "#1B2631";
-        break;
-    }
-
-    return color;
-  }
-
   getRequest() {
-    this.materias.forEach((element) => {
+    this.eventSource = [];
+    this.horario.forEach((element) => {
       if (element != null) {
-        this.horario.push(element);
+        element.title = this.utf8_encode(element.title);
+
+        element.tipologia =
+          element.tipologia === undefined ? "G" : element.tipologia[0];
+
+        if (this.grups[element.codAsignatura]) {
+          try {
+            var tipo =
+              element.tipologia[0] === "T"
+                ? this.grups[element.codAsignatura][0].t
+                : element.tipologia[0] === "S"
+                ? this.grups[element.codAsignatura][0].s
+                : this.grups[element.codAsignatura][0].p;
+            if (element.grup !== tipo) {
+            } else {
+              this.addNewEvent(
+                element.codAsignatura,
+                element.title,
+                element.codGrupo,
+                element.aula,
+                element.tipologia,
+                element.start,
+                element.end
+              );
+            }
+          } catch (error) {
+            var tipo =
+              element.tipologia === "T"
+                ? this.grups[element.codAsignatura].t
+                : element.tipologia === "S"
+                ? this.grups[element.codAsignatura].s
+                : this.grups[element.codAsignatura].p;
+            if (element.grup !== tipo) {
+            } else {
+              this.addNewEvent(
+                element.codAsignatura,
+                element.title,
+                element.codGrupo,
+                element.aula,
+                element.tipologia,
+                element.start,
+                element.end
+              );
+            }
+          }
+        } else {
+          if (typeof element.mostrarMensaje === "undefined") {
+            this.addNewEvent(
+              element.codAsignatura,
+              element.title,
+              element.codGrupo,
+              element.aula,
+              element.tipologia,
+              element.start,
+              element.end 
+            );
+          }
+        }
       }
     });
 
-    this.eventSource = [];
-    this.horario.forEach((element) => {
-      // console.log(new Date(element.start));
-      element.title = this.utf8_encode(element.title);
-      // element.title = element.title.length > 12 ? element.title.slice(0, 12) + '...' : element.title;
-      element.tipologia =
-        element.tipologia === undefined ? "G" : element.tipologia[0];
-
-      if (this.grups[element.codAsignatura]) {
-        try {
-          var tipo =
-            element.tipologia[0] === "T"
-              ? this.grups[element.codAsignatura][0].t
-              : element.tipologia[0] === "S"
-              ? this.grups[element.codAsignatura][0].s
-              : this.grups[element.codAsignatura][0].p;
-          if (element.grup !== tipo) {
-            console.log(element.grup + " .. " + element.tipologia);
-            console.log(tipo);
-          } else {
-            this.addNewEvent(
-              element.codAsignatura,
-              element.title,
-              element.codGrupo,
-              element.aula,
-              element.tipologia,
-              element.start,
-              element.end,
-              element.className
-            );
-          }
-        } catch (error) {
-          var tipo =
-            element.tipologia === "T"
-              ? this.grups[element.codAsignatura].t
-              : element.tipologia === "S"
-              ? this.grups[element.codAsignatura].s
-              : this.grups[element.codAsignatura].p;
-          if (element.grup !== tipo) {
-            console.log(element.grup + " .. " + element.tipologia);
-            console.log(tipo);
-          } else {
-            this.addNewEvent(
-              element.codAsignatura,
-              element.title,
-              element.codGrupo,
-              element.aula,
-              element.tipologia,
-              element.start,
-              element.end,
-              element.className
-            );
-          }
-        }
-      } else {
-        if (typeof element.mostrarMensaje === "undefined") {
-          this.addNewEvent(
-            element.codAsignatura,
-            element.title,
-            element.codGrupo,
-            element.aula,
-            element.tipologia,
-            element.start,
-            element.end,
-            element.className
-          );
-        }
-      }
+    this.storage.remove("horario").then(() => {
+      this.storage.set("horario", this.horario);
     });
   }
 }

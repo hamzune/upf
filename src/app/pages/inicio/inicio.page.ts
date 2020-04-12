@@ -35,9 +35,9 @@ export class InicioPage implements OnInit {
 
   finde = false;
 
-  fechaToday = moment(moment().add(2, "day").format("YYYY-MM-DD")).unix();
+  fechaToday = moment(moment().startOf("year").format("YYYY-MM-DD")).unix();
 
-  fechaTomorrow = moment(moment().add(2, "day").format("YYYY-MM-DD")).unix();
+  fechaTomorrow = moment(moment().endOf("year").format("YYYY-MM-DD")).unix();
 
   fechaHoy = moment().format("DD-MM-YYYY");
 
@@ -77,13 +77,13 @@ export class InicioPage implements OnInit {
         .then(async (resp: any) => {
           if (resp.success && typeof resp.data.error === "undefined") {
             this.clases = resp.data;
+            console.log("Consulta web");
             this.hoy = [];
             this.dia();
           } else {
-            //this.clases = [];
-            //obtener las clases de hoy en local
 
-            
+            //obtener las clases de hoy en local
+            console.log("De memoria");
             //IMPORTANTE
             this.hoy = [];
             this.dia();
@@ -91,6 +91,7 @@ export class InicioPage implements OnInit {
         })
         .catch((err) => console.log(err));
     });
+
   }
 
   utf8_encode(argString) {
@@ -115,15 +116,6 @@ export class InicioPage implements OnInit {
     await this.getCombo("horario").then((resp) => {
       this.clases = resp === "" ? [] : resp;
     });
-
-    
-    // return new Promise(resolve => {
-    //   this.getCombo('grups').then((resp) => {
-    //     this.grups = resp === '' ? [] : resp;
-    //     resolve();
-    //   });
-
-    // });
   }
 
   async getCombo(name) {
@@ -154,7 +146,7 @@ export class InicioPage implements OnInit {
   }
   dia() {
     this.clases.forEach((materia) => {
-      if (typeof materia.title !== "undefined" && moment(moment(materia.start).format('YYYY-MM-DD')).isSame(moment().add(2,'day').format('YYYY-MM-DD'), 'day')) {
+      if (typeof materia.title !== "undefined") {
         if (!materia.mostrarMensaje) {
           if (this.materias[materia.codAsignatura] == null) {
             this.materias[materia.codAsignatura] = {
@@ -165,7 +157,12 @@ export class InicioPage implements OnInit {
           }
 
           this.tareashoy = [];
-
+          if (
+            moment(moment(materia.start).format("YYYY-MM-DD")).isSame(
+              moment().format("YYYY-MM-DD"),
+              "day"
+            )
+          ) {
           try {
             this.tareas[materia.codAsignatura].forEach((tarea) => {
               if (this.sameDay(new Date(tarea.fecha), new Date())) {
@@ -175,55 +172,55 @@ export class InicioPage implements OnInit {
           } catch (error) {
             console.log("error insertando las tareas de hoy");
           }
+          
+            // CREAR la variable mat para meterla posteriormente en this.hoy
+            let mat = {
+              grup: materia.grup,
+              aula: materia.aula,
+              title: this.utf8_encode(materia.title),
+              codAsignatura: materia.codAsignatura,
+              tipologia: this.utf8_encode(materia.tipologia),
+              start: materia.start.slice(11, -3),
+              end: materia.end.slice(11, -3),
+              className: this.materias[materia.codAsignatura].color,
+              tareas: this.tareashoy,
+            };
 
-          // CREAR la variable mat para meterla posteriormente en this.hoy
-          let mat = {
-            grup: materia.grup,
-            aula: materia.aula,
-            title: this.utf8_encode(materia.title),
-            codAsignatura: materia.codAsignatura,
-            tipologia: this.utf8_encode(materia.tipologia),
-            start: materia.start.slice(11, -3),
-            end: materia.end.slice(11, -3),
-            className: this.materias[materia.codAsignatura].color,
-            tareas: this.tareashoy,
-          };
+            if (this.grups[mat.codAsignatura]) {
+              try {
+                var teoria = this.grups[mat.codAsignatura][0].t;
+                var seminario = this.grups[mat.codAsignatura][0].s;
+                var practica = this.grups[mat.codAsignatura][0].p;
+              } catch (error) {
+                var teoria = this.grups[mat.codAsignatura].t;
+                var seminario = this.grups[mat.codAsignatura].s;
+                var practica = this.grups[mat.codAsignatura].p;
+              }
 
-          if (this.grups[mat.codAsignatura]) {
-            try {
-              var teoria = this.grups[mat.codAsignatura][0].t;
-              var seminario = this.grups[mat.codAsignatura][0].s;
-              var practica = this.grups[mat.codAsignatura][0].p;
-            } catch (error) {
-              var teoria = this.grups[mat.codAsignatura].t;
-              var seminario = this.grups[mat.codAsignatura].s;
-              var practica = this.grups[mat.codAsignatura].p;
-            }
+              var tipo =
+                mat.tipologia[0] === "T"
+                  ? teoria
+                  : mat.tipologia[0] === "S"
+                  ? seminario
+                  : practica;
 
-            var tipo =
-              mat.tipologia[0] === "T"
-                ? teoria
-                : mat.tipologia[0] === "S"
-                ? seminario
-                : practica;
-
-            if (mat.grup === tipo) {
-              //si coinciden los grupos lo añadimos
-              this.hoy.push(mat);
+              if (mat.grup === tipo) {
+                //si coinciden los grupos lo añadimos
+                this.hoy.push(mat);
+              } else {
+                console.log("Grupo1: ", mat.grup);
+                console.log("Grupo2: ", tipo);
+              }
             } else {
-              console.log("Grupo1: ", mat.grup);
-              console.log("Grupo2: ", tipo);
+              //si no hay grupos añadidos añadimos la materia igual
+              this.hoy.push(mat);
+              //ordenamos la matriz
+              this.hoy = this.hoy.sort(
+                (a, b) => a.start.slice(0, 2) - b.start.slice(0, 2)
+              );
             }
-          } else {
-            //si no hay grupos añadidos añadimos la materia igual
-            this.hoy.push(mat);
-            //ordenamos la matriz
-            this.hoy = this.hoy.sort(
-              (a, b) => a.start.slice(0, 2) - b.start.slice(0, 2)
-            );
           }
         }
-
         //para ordenar respecto a la hora en la que me encuentro
 
         // this.hoy.forEach((ele, index) => {
@@ -255,7 +252,6 @@ export class InicioPage implements OnInit {
   }
 
   goToPage(materia) {
-
     this.navCtrl.navigateForward("/materia/" + materia.codAsignatura);
   }
 }
