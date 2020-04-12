@@ -1,36 +1,34 @@
-import { Component } from '@angular/core';
+import { Component } from "@angular/core";
 
-import { File } from '@ionic-native/file/ngx';
-
-import { Events } from "@ionic/angular";
-
-import { AlertController } from '@ionic/angular';
-import { NavController } from '@ionic/angular';
-import { Router } from '@angular/router';
-import { StorageService } from '../../services/storage.service';
-import { ApiService } from '../../services/api.service';
-import * as moment from 'moment';
-moment.locale('es');
+import { AlertController } from "@ionic/angular";
+import { NavController } from "@ionic/angular";
+import { Router } from "@angular/router";
+import { StorageService } from "../../services/storage.service";
+import { ApiService } from "../../services/api.service";
+import * as moment from "moment";
+moment.locale("es");
 
 @Component({
-  selector: 'app-calendar',
-  templateUrl: './calendar.page.html',
-  styleUrls: ['./calendar.page.scss'],
+  selector: "app-calendar",
+  templateUrl: "./calendar.page.html",
+  styleUrls: ["./calendar.page.scss"],
 })
 export class CalendarPage {
   calendar = {
-    mode: 'month',
+    mode: "month",
     currentDate: new Date(),
-    locale: 'es-Ar',
+    locale: "es-Ar",
     startingDayWeek: 1,
     startingDayMonth: 1,
-    formatDayHeader: 'EEEEE',
-    formatHourColumn: 'HH'
+    formatDayHeader: "EEEEE",
+    formatHourColumn: "HH",
   };
 
   selectedDate = new Date();
 
-  thisDateTitle = '';
+  thisDateTitle = "";
+
+  nameMes = "";
 
   eventSource = [];
 
@@ -40,101 +38,77 @@ export class CalendarPage {
 
   materias: any = [];
 
-  findes =  false;
+  fechaToday = moment(moment().startOf('year').format('YYYY-MM-DD')).unix();
 
-  fechaToday = moment(moment().format('YYYY-MM-DD')).unix();
+  fechaTomorrow = moment(moment().endOf('year').format('YYYY-MM-DD')).unix();
 
-  fechaTomorrow = moment(moment().add(3, 'day').format('YYYY-MM-DD')).unix();
+  hoy: any[] = [];
 
+  clases = [];
 
   markDisabled = (date: Date) => {
-    return (date.getDay() === 6 || date.getDay() === 0);
-  }
+    return date.getDay() === 6 || date.getDay() === 0;
+  };
 
   constructor(
     public navCtrl: NavController,
     private storage: StorageService,
     public alertController: AlertController,
     private api: ApiService,
-    private router: Router,
-    private file: File,
-    public events: Events
-  ) {
-    events.subscribe("back", () => {
-      this.courses();
-    });
-    events.subscribe("calendar", () => {
-      this.courses();
-    });
-
-  }
+  ) {}
 
   ionViewWillEnter() {
-
-    this.findes = this.markDisabled(new Date());
-    this.fechaToday = moment(moment().startOf('year').format('YYYY-MM-DD')).unix();
-    this.fechaTomorrow = moment(moment().endOf('year').format('YYYY-MM-DD')).unix();
     this.courses();
- 
   }
 
-  async courses() {
-    await this.getInfoStorage().then(() => {
-      this.api
-        .selecionarRangoHorarios({
-          start: this.fechaToday.toString(),
-          end: this.fechaTomorrow.toString()
-        })
-        .then(async (resp: any) => {
-          if (resp.success && typeof resp.data.error === 'undefined') {
-            this.horario = resp.data;
-            this.getRequest();
-          } else {
-            this.getRequest();
-          }
-        })
-        .catch(err => console.log(err));
-    });
-  }
+  courses() {
 
-  async presentAlert() {
-    const alert = await this.alertController.create({
-      header: 'La sesión no es válida o ha sido cerrada!',
-      message: 'Ir a configuración para obtener una nueva <strong>sesión</strong>!',
-      buttons: [
-        {
-          text: 'Cancelar',
-          role: 'cancel',
-          cssClass: 'secondary',
-          handler: () => {
-            console.log('Confirm Cancel');
-          }
-        },
-        {
-          text: '¡ VALE !',
-          handler: () => {
-            this.router.navigateByUrl('/tabs/settings');
-          }
+    this.api
+      .selecionarRangoHorarios({
+        start: this.fechaToday.toString(),
+        end: this.fechaTomorrow.toString(),
+      })
+      .then(async (resp: any) => {
+        if (resp.success && typeof resp.data.error === "undefined") {
+          this.clases = resp.data;
+          this.horario = [];
+          this.dia();
+          this.getInfoStorage().then(() => {
+            this.getRequest();
+          });
+        } else {
+          this.getInfoStorage().then(() => {
+            this.dia();
+            this.getRequest();
+          });
+
         }
-      ]
-    });
-
-    await alert.present();
+      })
+      .catch((err) => console.log(err));
   }
 
   dayMode() {
-    this.calendar.mode = 'day';
+    this.calendar.mode = "day";
   }
 
   weekMode() {
-    this.calendar.mode = 'week';
+    this.calendar.mode = "week";
   }
 
   monthMode() {
-    this.calendar.mode = 'month';
+    this.calendar.mode = "month";
   }
 
-  addNewEvent(codigo: any, titulo: any, groupo: any, aulas: any, tipos: any, start: any, end: any, className: any) {
+  addNewEvent(
+    codigo: any,
+    titulo: any,
+    groupo: any,
+    aulas: any,
+    tipos: any,
+    start: any,
+    end: any,
+    className: any
+  ) {
     start = new Date(start);
     end = new Date(end);
 
@@ -146,68 +120,135 @@ export class CalendarPage {
       group: groupo,
       startTime: start,
       endTime: end,
-      startTimeString: moment(start.getTime()).format('HH:mm'),
-      endTimeString: moment(end.getTime()).format('HH:mm'),
+      startTimeString: moment(start.getTime()).format("HH:mm"),
+      endTimeString: moment(end.getTime()).format("HH:mm"),
       allDay: false,
-      color: this.materias[codigo].color
+      color: this.materias[codigo].color,
     };
 
     this.eventSource.push(event);
   }
 
-  onEventSelected(ev) { }
+  onEventSelected(ev) {}
 
   goToPage(materia) {
-    if(materia.codAsignatura){
-      this.navCtrl.navigateForward('/materia/' + materia.codAsignatura);
-    }
+    this.navCtrl.navigateForward("/materia/" + materia.codAsignatura);
   }
-  
-  
+
+  dia() {
+    this.hoy=[];
+    this.clases.forEach((materia) => {
+      if (typeof materia.title !== "undefined") {
+        if (!materia.mostrarMensaje) {
+          if (this.materias[materia.codAsignatura] == null) {
+            this.materias[materia.codAsignatura] = {
+              id: materia.codAsignatura,
+              title: this.utf8_encode(materia.title),
+              color: this.get_colores(this.utf8_encode(materia.tipologia)),
+            };
+          }
+
+          if (
+            moment(moment(materia.start).format("YYYY-MM-DD")).isSame(
+              moment().format("YYYY-MM-DD"),
+              "day"
+            )
+          ) {
+            const start = materia.start;
+            const end = materia.end;
+            const mat = {
+              grup: materia.grup,
+              aula: materia.aula,
+              title: this.utf8_encode(materia.title),
+              codAsignatura: materia.codAsignatura,
+              tipologia: this.utf8_encode(materia.tipologia),
+              start: start.slice(11, -3),
+              end: end.slice(11, -3),
+              className: this.materias[materia.codAsignatura].color,
+            };
+
+            if (this.grups[mat.codAsignatura]) {
+              try {
+                const tipo =
+                  mat.tipologia[0] === "T"
+                    ? this.grups[mat.codAsignatura][0].t
+                    : mat.tipologia[0] === "S"
+                    ? this.grups[mat.codAsignatura][0].s
+                    : this.grups[mat.codAsignatura][0].p;
+                if (mat.grup !== tipo) {
+                } else {
+                  this.hoy.push(mat);
+                }
+              } catch (error) {
+                const tipo =
+                  mat.tipologia === "T"
+                    ? this.grups[mat.codAsignatura].t
+                    : mat.tipologia === "S"
+                    ? this.grups[mat.codAsignatura].s
+                    : this.grups[mat.codAsignatura].p;
+                if (mat.grup !== tipo) {
+                } else {
+                  this.hoy.push(mat);
+                }
+              }
+            } else {
+              this.hoy.push(mat);
+              this.hoy = this.hoy.sort(
+                (a, b) => a.start.slice(0, 2) - b.start.slice(0, 2)
+              );
+            }
+          }
+        }
+
+        this.hoy.forEach((ele, index) => {
+          const hora = new Date().getHours();
+          if (hora > ele.start.slice(0, 2)) {
+            const aux = this.hoy[0];
+            this.hoy[0] = ele;
+            this.hoy[index] = aux;
+          }
+        });
+      }
+    });
+
+    this.storage.set("horario", this.clases);
+  }
+
   async getInfoStorage() {
-    // let materias;
-    // await this.file.readAsText(this.file.dataDirectory,"materias.json").then((resp) => {
-    //   resp = JSON.parse(resp)
-    //   materias = resp === '' ? [] : resp;
-   
-    // });
+    let materias;
 
-    // materias.forEach(element => {
-    //   if (element != null) {
-    //     this.materias[element.id] = (element);
-    //   }
-    // });
-
-    await this.getCombo('materias').then((resp) => {
-      this.materias = resp === '' ? [] : resp;
+    await this.getCombo("materias").then((resp) => {
+      materias = resp === "" ? [] : resp;
     });
 
-    await this.getCombo('horario').then((resp) => {
-      this.horario = resp === '' ? [] : resp;
+    materias.forEach((element) => {
+      if (element != null) {
+        this.materias[element.id] = element;
+      }
     });
 
-    // await this.file.readAsText(this.file.dataDirectory,"horarios.json").then((resp) => {
-    //   resp = JSON.parse(resp)
-    //   horario = resp === '' ? [] : resp;
+    let horario;
 
-    // });
+    await this.getCombo("horario").then((resp) => {
+      horario = resp === "" ? [] : resp;
+    });
 
-    // horario.forEach(element => {
-    //   if (element != null) {
-    //     this.horario.push(element);
-    //   }
-    // });
+    horario.forEach((element) => {
+      if (element != null) {
+        this.horario.push(element);
+      }
+    });
 
-    await this.getCombo('grups').then((resp) => {
-      this.grups = resp === '' ? [] : resp;
+    await this.getCombo("grups").then((resp) => {
+      this.grups = resp === "" ? [] : resp;
     });
   }
-
 
   async getCombo(name) {
-    let value = '';
-    await this.storage.get(name)
-      .then((data: string) => value = (data !== null) ? data : '');
+    let value = "";
+    await this.storage
+      .get(name)
+      .then((data: string) => (value = data !== null ? data : ""));
     return value;
   }
 
@@ -216,6 +257,7 @@ export class CalendarPage {
   }
 
   onViewTitleChanged(event) {
+    this.courses();
     this.thisDateTitle = event;
   }
 
@@ -224,28 +266,61 @@ export class CalendarPage {
   }
 
   utf8_encode(argString) {
-    const txt = document.createElement('textarea');
+    const txt = document.createElement("textarea");
     txt.innerHTML = argString;
     return txt.value;
   }
 
+  get_colores(type) {
+    let color = "#1B2631";
+
+    switch (type) {
+      case "Seminario":
+        color = "#154360";
+        break;
+
+      case "Teoría":
+        color = "#0B5345";
+        break;
+
+      case "Prácticas":
+        color = "#4D5656";
+        break;
+
+      default:
+        color = "#1B2631";
+        break;
+    }
+
+    return color;
+  }
 
   getRequest() {
+    this.materias.forEach((element) => {
+      if (element != null) {
+        this.horario.push(element);
+      }
+    });
+
     this.eventSource = [];
-    this.horario.forEach(element => {
-
+    this.horario.forEach((element) => {
+      // console.log(new Date(element.start));
       element.title = this.utf8_encode(element.title);
-
-      element.tipologia = element.tipologia === undefined ? 'G' : element.tipologia[0];
+      // element.title = element.title.length > 12 ? element.title.slice(0, 12) + '...' : element.title;
+      element.tipologia =
+        element.tipologia === undefined ? "G" : element.tipologia[0];
 
       if (this.grups[element.codAsignatura]) {
         try {
-          var tipo = element.tipologia[0] === 'T' ? this.grups[element.codAsignatura][0].t :
-            element.tipologia[0] === 'S' ? this.grups[element.codAsignatura][0].s :
-              this.grups[element.codAsignatura][0].p;
+          var tipo =
+            element.tipologia[0] === "T"
+              ? this.grups[element.codAsignatura][0].t
+              : element.tipologia[0] === "S"
+              ? this.grups[element.codAsignatura][0].s
+              : this.grups[element.codAsignatura][0].p;
           if (element.grup !== tipo) {
-
-
+            console.log(element.grup + " .. " + element.tipologia);
+            console.log(tipo);
           } else {
             this.addNewEvent(
               element.codAsignatura,
@@ -259,12 +334,15 @@ export class CalendarPage {
             );
           }
         } catch (error) {
-          var tipo = element.tipologia === 'T' ? this.grups[element.codAsignatura].t :
-            element.tipologia === 'S' ? this.grups[element.codAsignatura].s :
-              this.grups[element.codAsignatura].p;
+          var tipo =
+            element.tipologia === "T"
+              ? this.grups[element.codAsignatura].t
+              : element.tipologia === "S"
+              ? this.grups[element.codAsignatura].s
+              : this.grups[element.codAsignatura].p;
           if (element.grup !== tipo) {
-
-            
+            console.log(element.grup + " .. " + element.tipologia);
+            console.log(tipo);
           } else {
             this.addNewEvent(
               element.codAsignatura,
@@ -279,7 +357,7 @@ export class CalendarPage {
           }
         }
       } else {
-        if (typeof element.mostrarMensaje === 'undefined') {
+        if (typeof element.mostrarMensaje === "undefined") {
           this.addNewEvent(
             element.codAsignatura,
             element.title,
@@ -293,11 +371,5 @@ export class CalendarPage {
         }
       }
     });
-
-    this.storage.remove("horario").then(() => {
-      this.storage.set("horario", this.horario);
-    });
   }
-    
-  
 }
